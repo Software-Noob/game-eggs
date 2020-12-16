@@ -1,0 +1,73 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v1"
+    },
+    "exported_at": "2020-12-16T03:51:43+02:00",
+    "name": "Ballistic Overkill",
+    "author": "admin@softwarenoob.com",
+    "description": "Ballistic Overkill is a fast paced PvP shooter. Easy pick up and play, no complicated setups or rules: it's kill or be killed! Over 80 weapons. 7 Classes. 10 Maps.",
+    "features": null,
+    "image": "quay.io\/parkervcp\/pterodactyl-images:debian_source",
+    "startup": ".\/BODS.x86_64 -batchmode -nographics -logfile output.txt | tail -f output.txt",
+    "config": {
+        "files": "{\r\n    \"config.txt\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"ServerName\": \"ServerName={{server.build.env.SERVER_NAME}}\",\r\n            \"ServerPort\": \"ServerPort={{server.build.default.port}}\",\r\n            \"QueryPort\": \"QueryPort={{server.build.env.QUERY_PORT}}\",\r\n            \"Password\": \"Password={{server.build.env.SERVER_PASSWORD}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"HOST server ready\"\r\n}",
+        "logs": "{\r\n    \"custom\": true,\r\n    \"location\": \"logs\/latest.log\"\r\n}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\napt -y update\r\napt -y --no-install-recommends --no-install-suggests install curl lib32gcc1 ca-certificates\r\n\r\n## just in case someone removed the defaults.\r\nif [ \"${STEAM_USER}\" == \"\" ]; then\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n.\/steamcmd.sh +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +force_install_dir \/mnt\/server +app_update ${SRCDS_APPID} ${EXTRA_FLAGS} +quit\r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n# Game specific features\r\ncd \/mnt\/server\/\r\ntouch output.txt # otherwise no console logs until second server startup\r\nln -s ..\/..\/..\/steamcmd\/linux64\/steamclient.so BODS_Data\/Plugins\/x86_64",
+            "container": "debian:buster-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "App ID",
+            "description": "Steam app id for auto-updates. Leave blank to avoid auto-update, the default value to use is 416880.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "416880",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|numeric"
+        },
+        {
+            "name": "Server Name",
+            "description": "The name of the server that will be shown in the server list",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A Pterodactyl Hosted Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:128"
+        },
+        {
+            "name": "Query Port",
+            "description": "Server Query Port",
+            "env_variable": "QUERY_PORT",
+            "default_value": "27016",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric"
+        },
+        {
+            "name": "Server Pass",
+            "description": "If specified, players must provide this password to join the server.",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_dash|between:1,50"
+        },
+        {
+            "name": "ld lib path",
+            "description": "This is required to load specific libraries",
+            "env_variable": "LD_LIBRARY_PATH",
+            "default_value": ".\/BODS_Data\/Plugins\/x86_64",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string"
+        }
+    ]
+}
