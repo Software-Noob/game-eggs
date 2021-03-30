@@ -1,1 +1,1 @@
-Game eggs in various states of production for the pterodactyl based game panels
+Game eggs in various states of development for the Pterodactyl based game panels
