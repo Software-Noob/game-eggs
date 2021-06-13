@@ -1,1 +1,1 @@
-Game eggs in various states of development for the Pterodactyl based game panels
+Everything moved to https://github.com/parkervcp/eggs
